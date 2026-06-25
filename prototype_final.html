@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ALK R&D — Connective Layer (prototype)</title>
+<style>
+  :root{--teal:#0a6e8a;--teal2:#0fa3a3;--ink:#1f2a30;--muted:#5a6670;--line:#e4e8ea;--bg:#f6f8f9;
+    --green:#1d9e75;--amber:#d98a00;--amberbg:#fff7e6;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px}
+  .hero{background:linear-gradient(100deg,var(--teal),var(--teal2));color:#fff;border-radius:14px;padding:16px 22px}
+  .hero h1{margin:0;font-size:20px}.hero p{margin:6px 0 0;font-size:13px;opacity:.96}
+  .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:14px 0;padding:11px 14px;background:#fff;border:1px solid var(--line);border-radius:12px}
+  .bar label{font-size:13px;color:var(--muted)}
+  select,input[type=text]{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .metrics{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+  .metric{background:#f0f6f7;border:1px solid #dcebef;border-radius:10px;padding:6px 12px;min-width:84px}
+  .metric .v{font-size:17px;font-weight:700;color:var(--teal)}.metric .k{font-size:11px;color:var(--muted)}
+  .metric.warn .v{color:var(--amber)}
+  .tabs{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
+  .tab{padding:9px 16px;border:1px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted)}
+  .tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .panel{display:none}.panel.active{display:block}
+  h2.sec{font-size:17px;margin:4px 0 2px}.note{font-size:13px;color:var(--muted);margin:0 0 14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .tile h3{margin:0;font-size:14px}.tile .cnt{font-size:26px;font-weight:700;color:var(--teal);margin:6px 0 2px}
+  .tile .sub{font-size:11.5px;color:var(--muted);min-height:16px}
+  .btn{font:inherit;font-weight:600;border:0;border-radius:9px;padding:8px 13px;cursor:pointer}
+  .btn.primary{background:var(--teal);color:#fff}.btn.go{background:var(--green);color:#fff}
+  .btn.small{padding:6px 11px;font-size:12.5px;margin-top:8px}.btn:disabled{opacity:.45;cursor:default}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .scan{background:#f4f1ea;border:1px solid #d8d2c4;border-radius:8px;padding:13px;font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre-wrap;color:#3a352c;box-shadow:inset 0 0 22px rgba(0,0,0,.05)}
+  .scan.bad{filter:contrast(.82) blur(.3px)}
+  .relwrap{height:8px;background:#eef0f2;border-radius:5px;overflow:hidden}.relwrap>i{display:block;height:100%;background:linear-gradient(90deg,var(--teal2),var(--teal))}
+  .badge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:700;margin:0 5px 4px 0}
+  .field{display:flex;align-items:center;gap:8px;margin:6px 0}.field label{font-size:12px;color:var(--muted);min-width:118px}.field input{flex:1}
+  .chk{font-size:12.5px;margin:2px 0}.chk .ok{color:#176b4b}.chk .bad{color:#b04a00}
+  .conf-hi{color:#176b4b;font-weight:700}.conf-lo{color:#b04a00;font-weight:700}
+  .warnbox{background:var(--amberbg);border:1px solid #f0cf8a;border-radius:8px;padding:9px 11px;font-size:12.5px;color:#7a5600}
+  .okbox{background:#e9f6ef;border:1px solid #bfe6d2;border-radius:8px;padding:9px 11px;font-size:12.5px;color:#176b4b}
+  .upload{border:2px dashed #bcd3da;border-radius:12px;padding:18px;text-align:center;background:#fbfdfd}
+  .upload .big{font-size:14px;font-weight:600;color:var(--teal)}
+  .glayout{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}@media(max-width:900px){.glayout{grid-template-columns:1fr}}
+  .gpanel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;min-height:200px}
+  .trace{background:#e9f6ef;border:1px solid #bfe6d2;border-radius:8px;padding:8px 10px;font-size:12.5px}
+  .kv{font-size:12.5px;margin:3px 0}
+  .relrow{padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}.relrow:hover{background:#f7fafb}
+  .legend{font-size:12px;color:var(--muted);margin-top:8px}
+  .qitem{border:1px solid #f0cf8a;background:var(--amberbg);border-radius:10px;padding:11px 13px;margin-bottom:10px}
+  svg text{font-family:inherit}
+  details summary{cursor:pointer;color:var(--teal);font-size:13px;font-weight:600}
+  .foot{font-size:11.5px;color:#94a0a8;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>ALK R&amp;D — Connective Layer</h1>
+    <p>A layer <b>on top of</b> existing systems. <b>Connect</b> pulls everything in (connectors + OCR/AI) — but
+       <b>nothing enters the knowledge graph until it passes a validation gate</b>. Then search, trace and govern by role.</p>
+  </div>
+
+  <div class="bar">
+    <label>Role &nbsp;<select id="role">
+      <option>Standard user · scientist / lab tech</option>
+      <option>Super user · experiment design</option>
+      <option>QA / Regulatory</option></select></label>
+    <button class="btn" id="reset" style="background:#eef0f2;color:#444">↺ Reset</button>
+    <div class="metrics">
+      <div class="metric"><div class="v" id="mRec">0</div><div class="k">trusted records</div></div>
+      <div class="metric warn"><div class="v" id="mHeld">0</div><div class="k">held for review</div></div>
+      <div class="metric"><div class="v" id="mDigi">0</div><div class="k">paper digitised</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-p="connect">1 · Connect &amp; validate</div>
+    <div class="tab" data-p="graph">2 · Knowledge graph</div>
+    <div class="tab" data-p="search">3 · Search (IR)</div>
+  </div>
+
+  <!-- TAB 1 -->
+  <div class="panel active" id="p-connect">
+    <h2 class="sec">Connect your data types — every record is validated</h2>
+    <p class="note">Each team uses different systems. Connecting runs a <b>validation gate</b>: IDs present · link resolves · mandatory fields. Clean records are trusted; anything that fails is <b>held for review</b> — it never silently enters the graph.</p>
+    <div id="flash"></div>
+    <div class="tiles" id="tiles"></div>
+
+    <h2 class="sec" style="margin-top:20px">Review queue <span id="qcount" style="font-size:13px;color:var(--amber)"></span></h2>
+    <p class="note">Records that failed validation (missing or ambiguous links) wait here. ALK's IDs are not fully standardised, so this is expected — resolve each before it is trusted.</p>
+    <div id="queue"></div>
+
+    <h2 class="sec" style="margin-top:20px">Digitise paper / manual records (OCR/AI)</h2>
+    <p class="note">Upload a scanned document, or try a sample. Clean scans ingest after a quick check; poor scans are held for <b>human review</b>. Paper uses OCR confidence; connectors use the checks above — same gate, different signal.</p>
+    <div class="upload" id="upload">
+      <div class="big">⤓ Upload a scanned document</div>
+      <div class="note" style="margin:6px 0">PDF / JPG / PNG &nbsp;·&nbsp; extraction is simulated for this concept prototype</div>
+      <input type="file" id="ocrfile" accept=".pdf,.png,.jpg,.jpeg"/>
+      <div style="margin-top:10px">or try a sample:
+        <button class="btn primary small" style="margin:0 4px" onclick="loadSample('PF-2018-204')">Clean form</button>
+        <button class="btn primary small" onclick="loadSample('NB-2011-114')">Poor scan</button></div>
+    </div>
+    <div id="ocrwork" style="margin-top:12px"></div>
+    <div class="foot">Grounding note: connectors are simulated read-only exports; OCR extraction and the audit trail are illustrative for this concept prototype.</div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div class="panel" id="p-graph">
+    <h2 class="sec">Knowledge graph — click a node to retrieve related records</h2>
+    <p class="note">Solid = trusted &amp; linked. <b>Dashed amber</b> = a link the system could not resolve on its own (ambiguous / missing) — resolve it in the Review queue. Gold = from paper. Access-gated by role.</p>
+    <div class="glayout">
+      <div class="card" style="overflow-x:auto"><svg id="graph" width="660" height="480" viewBox="0 0 660 480"></svg>
+        <div class="legend" id="glegend"></div></div>
+      <div class="gpanel" id="gpanel"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div class="panel" id="p-search">
+    <h2 class="sec">“Have we tested this before?”</h2>
+    <p class="note">One search across every <b>trusted</b> record (records held for review are excluded until resolved). Access-gated by role.</p>
+    <div class="bar" style="margin-top:0">
+      <input type="text" id="q" placeholder="Search experiments, samples, results…" value="Bet v 1 potency" style="flex:1"/>
+      <div class="metrics" id="sMetrics"></div></div>
+    <div id="results"></div><div id="hint"></div>
+  </div>
+</div>
+
+<script>
+const RATE=70,MANUAL_MIN=22;
+const ROLES=["Standard user · scientist / lab tech","Super user · experiment design","QA / Regulatory"];
+const SRC={LIMS:"LIMS",Instrument:"Instrument export",SQL:"SQL database",SharedFolder:"Shared folder",QMS:"QMS",Paper:"Paper (OCR/AI)"};
+const SRCNOTE={LIMS:"samples & batches",Instrument:"measurements & exports",SQL:"structured results",SharedFolder:"reports & files",QMS:"protocols & decisions"};
+const FILL={sample:"#cfe8d4",experiment:"#cfe0f3",protocol:"#e6dcef",result:"#fde3c4",report:"#fdf3c7",decision:"#f6cccc"};
+const COL={sample:0,protocol:1,experiment:2,result:3,report:4,decision:5};
+function N(o){o.tags=new Set(o.tags);if(!o.status)o.status="trusted";return o;}
+
+function seedNodes(){return {
+ "SMP-BP-2403":N({type:"sample",row:0,title:"Birch pollen extract — batch BP-2403",allergen:"Bet v 1 (birch)",source:"LIMS",owner:"J. Nielsen",date:"2026-03-04",origin:"LIMS record · SAMPLE/BP-2403",tags:["birch","bet","v1","pollen","extract","potency"],passport:{"Sample ID":"BP-2403","Allergen":"Bet v 1","Project":"Birch SLIT-tablet"}}),
+ "EXP-BP-IGE-77":N({type:"experiment",row:0,title:"IgE-inhibition relative potency assay",allergen:"Bet v 1 (birch)",source:"Instrument",owner:"A. Sørensen",date:"2026-03-06",origin:"Plate-reader export · run_77.csv",tags:["birch","bet","v1","potency","ige","inhibition","assay"],passport:{"Experiment ID":"EXP-77","Method":"IgE inhibition","Replicates":"3"}}),
+ "PRO-POT-014v3":N({type:"protocol",row:0,title:"SOP-POT-014 v3 — relative potency",allergen:"—",source:"QMS",owner:"QA Dept",date:"2025-11-12",origin:"QMS controlled document · SOP-POT-014 v3",tags:["potency","ige","sop","protocol"],passport:{"Doc ID":"SOP-POT-014","Version":"v3","Status":"Effective"}}),
+ "RES-BP-2403":N({type:"result",row:0,title:"Relative potency = 102 % of reference",allergen:"Bet v 1 (birch)",source:"SQL",owner:"A. Sørensen",date:"2026-03-07",origin:"SQL DB · results.potency WHERE exp_id=77",tags:["birch","bet","v1","potency","result","pass"],passport:{"Result ID":"RES-2403","Value":"102 %","Spec":"80–120 %","Verdict":"PASS"}}),
+ "REP-BP-2403":N({type:"report",row:0,title:"Batch release report — BP-2403",allergen:"Bet v 1 (birch)",source:"SharedFolder",owner:"J. Nielsen",date:"2026-03-09",origin:"Shared folder · /Releases/2026/BP-2403.pdf",tags:["birch","release","report","batch"],passport:{"Report ID":"REP-2403","Type":"Batch release"}}),
+ "DEC-BP-2403":N({type:"decision",row:0,title:"Batch BP-2403 RELEASED",allergen:"Bet v 1 (birch)",source:"QMS",owner:"QA Dept",date:"2026-03-10",origin:"QMS · release decision log",tags:["birch","released","decision"],passport:{"Decision":"Released","By":"QA"}}),
+ "SMP-TG-2398":N({type:"sample",row:2,title:"Timothy grass extract — batch TG-2398",allergen:"Phl p 5 (grass)",source:"LIMS",owner:"M. Holm",date:"2026-01-15",origin:"LIMS record · SAMPLE/TG-2398",tags:["timothy","grass","phl","p5","extract","protein"],passport:{"Sample ID":"TG-2398","Allergen":"Phl p 5","Project":"Grass SLIT"}}),
+ "SMP-DM-2401":N({type:"sample",row:1,title:"House dust mite extract — batch DM-2401",allergen:"Der p 1 (HDM)",source:"LIMS",owner:"M. Holm",date:"2026-02-20",origin:"LIMS record · SAMPLE/DM-2401",tags:["hdm","der","p1","mite","extract"],passport:{"Sample ID":"DM-2401","Allergen":"Der p 1","Project":"HDM diagnostics"}}),
+ "SMP-DM-2410":N({type:"sample",row:4,title:"House dust mite extract — batch DM-2410",allergen:"Der p 1 (HDM)",source:"LIMS",owner:"M. Holm",date:"2026-03-18",origin:"LIMS record · SAMPLE/DM-2410",tags:["hdm","der","p1","mite","extract","2410"],passport:{"Sample ID":"DM-2410","Allergen":"Der p 1","Project":"HDM diagnostics"}}),
+ "EXP-DM-ZONE-12":N({type:"experiment",row:1,title:"Agar-plate inhibition-zone (image → numeric)",allergen:"Der p 1 (HDM)",source:"Instrument",owner:"June",date:"2026-02-22",origin:"Imaging station · zone_DM2401.tif",tags:["hdm","der","p1","agar","zone","image","diameter"],passport:{"Experiment ID":"EXP-12","Capture":"image → numeric"}}),
+ "RES-DM-2401":N({type:"result",row:1,title:"Inhibition zone Ø 14.2 mm",allergen:"Der p 1 (HDM)",source:"SQL",owner:"June",date:"2026-02-23",origin:"SQL DB · results.zone WHERE exp_id=12",tags:["hdm","der","p1","zone","result"],passport:{"Result ID":"RES-DM12","Diameter":"14.2 mm"}}),
+ "SMP-AH-NEW":N({type:"sample",row:3,title:"Peanut Ara h — early formulation (CONFIDENTIAL)",allergen:"Ara h (peanut)",source:"LIMS",owner:"Research Team P",date:"2026-05-30",origin:"LIMS · restricted project space",restricted:true,tags:["peanut","ara","h","confidential","formulation"],passport:{"Sample ID":"AH-NEW","Project":"Peanut tablet (Phase 2)","Access":"Research Team P only"}})
+};}
+function seedEdges(){return [
+ ["SMP-BP-2403","EXP-BP-IGE-77","tested in"],["PRO-POT-014v3","EXP-BP-IGE-77","governs"],
+ ["EXP-BP-IGE-77","RES-BP-2403","produces"],["RES-BP-2403","REP-BP-2403","reported in"],
+ ["REP-BP-2403","DEC-BP-2403","supports"],["SMP-DM-2401","EXP-DM-ZONE-12","tested in"],
+ ["EXP-DM-ZONE-12","RES-DM-2401","produces"]];}
+
+// validation: {type:'ok'} | {type:'missing',reason,parentType,edgeLabel} | {type:'ambiguous',reason,candidates,edgeLabel}
+const BACKLOG={
+ LIMS:[{id:"SMP-RW-2405",linksTo:null,edge:null,validation:{type:"ok"},
+   node:{type:"sample",row:5,title:"Ragweed extract — batch RW-2405",allergen:"Amb a 1 (ragweed)",source:"LIMS",owner:"M. Holm",date:"2026-04-02",origin:"LIMS record · SAMPLE/RW-2405",tags:["ragweed","amb","a1","extract"],passport:{"Sample ID":"RW-2405","Allergen":"Amb a 1"}}}],
+ Instrument:[
+  {id:"EXP-TG-PROT-31",linksTo:"SMP-TG-2398",edge:"tested in",validation:{type:"ok"},
+   node:{type:"experiment",row:2,title:"Phl p 5 protein-content assay (Bradford)",allergen:"Phl p 5 (grass)",source:"Instrument",owner:"K. Madsen",date:"2026-01-20",origin:"Plate-reader export · bradford_31.csv",tags:["timothy","grass","phl","p5","protein","bradford"],passport:{"Experiment ID":"EXP-31","Method":"Bradford"}}},
+  {id:"EXP-ZONE-99",linksTo:null,edge:null,
+   validation:{type:"ambiguous",reason:"Sample ID on the export reads “DM-240·” (non-standard) — it matches two samples.",candidates:["SMP-DM-2401","SMP-DM-2410"],edgeLabel:"tested in"},
+   node:{type:"experiment",row:4,title:"HDM zone assay — sample ID unclear",allergen:"Der p 1 (HDM)",source:"Instrument",owner:"June",date:"2026-03-20",origin:"Imaging station · zone_DM240x.tif",tags:["hdm","der","p1","zone","assay"],passport:{"Experiment ID":"EXP-99","Sample ID (read)":"DM-240·  ⚠ ambiguous"}}}],
+ SQL:[
+  {id:"RES-DM-2402",linksTo:null,edge:null,
+   validation:{type:"missing",reason:"No experiment reference on the export — the result is not linked to any experiment.",parentType:"experiment",edgeLabel:"produces"},
+   node:{type:"result",row:1,title:"Inhibition zone Ø 13.9 mm (replicate)",allergen:"Der p 1 (HDM)",source:"SQL",owner:"June",date:"2026-02-24",origin:"SQL DB · results.zone rep=2 (exp_id NULL)",tags:["hdm","der","p1","zone","result","replicate"],passport:{"Result ID":"RES-DM12b","Diameter":"13.9 mm","Experiment ID":"(missing) ⚠"}}}],
+ SharedFolder:[{id:"REP-DM-2401",linksTo:"RES-DM-2401",edge:"reported in",validation:{type:"ok"},
+   node:{type:"report",row:1,title:"HDM characterisation report — DM-2401",allergen:"Der p 1 (HDM)",source:"SharedFolder",owner:"M. Holm",date:"2026-02-26",origin:"Shared folder · /Reports/DM-2401.docx",tags:["hdm","der","p1","report","characterisation"],passport:{"Report ID":"REP-DM01","Type":"Characterisation"}}}],
+ QMS:[{id:"PRO-PROT-009",linksTo:"EXP-TG-PROT-31",edge:"governs",validation:{type:"ok"},
+   node:{type:"protocol",row:2,title:"SOP-PROT-009 — Bradford protein assay",allergen:"—",source:"QMS",owner:"QA Dept",date:"2025-09-01",origin:"QMS controlled document · SOP-PROT-009",tags:["protein","bradford","sop","protocol"],passport:{"Doc ID":"SOP-PROT-009","Version":"v2"}}}]
+};
+
+const OCR_DOCS={
+ "PF-2018-204":{label:"Clean form (2018) · Der p 1 potency",quality:"high",
+  scanned:"ALK R&D — EXPERIMENT FORM 204/2018\nDate: 12-09-2018\nAllergen: Der p 1 (house dust mite)\nMethod: IgE inhibition (relative potency)\nSample: HDM ext. lot DM-1809\nResult: 99 % relative potency\nTech: K. Madsen",
+  extracted:{"Experiment ID":"PF-2018-204","Allergen":"Der p 1","Method":"IgE inhibition","Result":"99 % rel. potency","Date":"2018-09-12"},
+  fieldConf:{"Experiment ID":.99,"Allergen":.98,"Method":.96,"Result":.97,"Date":.99},confidence:.96,
+  linksTo:"SMP-DM-2401",edge:"prior work on same allergen",
+  builds:{type:"experiment",row:1,allergen:"Der p 1 (HDM)",source:"Paper",date:"2018-09-12",owner:"K. Madsen",
+    title:"Der p 1 potency study (2018) — digitised",origin:"Paper form PF-2018-204 (OCR/AI, verified)",tags:["hdm","der","p1","potency","ige","historical","2018"]}},
+ "NB-2011-114":{label:"Poor scan (2011) · Bet v 1 potency",quality:"low",
+  scanned:"ALK R&D — LAB N0TEB00K\nDate: 18-05-2011   N0tebook: NB-2011-114\nAllerg3n: Bet v 1 (birch poll3n)\nMeth0d: IgE inhibiti0n (rel. p0tency)\nSample: birch ext. l0t BP-11O5\nResult: rel. p0tency ~ 9?% (ref std 2O1O)\nSigned: (illegible)",
+  extracted:{"Experiment ID":"NB-2011-114","Allergen":"Bet v 1","Method":"IgE inhibition","Result":"rel. potency ~98 %","Date":"2011-05-18"},
+  fieldConf:{"Experiment ID":.95,"Allergen":.74,"Method":.69,"Result":.52,"Date":.93},confidence:.68,
+  linksTo:"SMP-BP-2403",edge:"prior work on same allergen",
+  builds:{type:"experiment",row:0,allergen:"Bet v 1 (birch)",source:"Paper",date:"2011-05-18",owner:"(archived)",
+    title:"Bet v 1 potency study (2011) — digitised",origin:"Paper notebook NB-2011-114 (OCR/AI, verified)",tags:["birch","bet","v1","potency","ige","historical","2011"]}}
+};
+
+let nodes,edges,added,queue,digitised,selected,ocrLoaded,ocrRun,flash;
+function init(){nodes=seedNodes();edges=seedEdges();added=new Set();queue=[];digitised=new Set();selected=null;ocrLoaded=null;ocrRun=false;flash="";}
+init();
+const role=()=>document.getElementById('role').value;
+const visible=n=>!n.restricted||role()!==ROLES[0];
+const trusted=n=>n.status==='trusted';
+function tokenize(s){return (s.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(t=>t.length>1);}
+function nodeText(n){let p=[n.title,n.allergen,n.type,[...n.tags].join(' ')];for(const k in n.passport)p.push(k+' '+n.passport[k]);return p.join(' ');}
+function bm25(query,ids){const k1=1.5,b=.75,docs={},dl={};let tot=0;
+  ids.forEach(i=>{const d=tokenize(nodeText(nodes[i]));docs[i]=d;dl[i]=d.length;tot+=d.length;});
+  const avg=ids.length?tot/ids.length:1,df={};
+  ids.forEach(i=>{new Set(docs[i]).forEach(t=>{df[t]=(df[t]||0)+1;});});
+  const Nc=Math.max(ids.length,1),idf={};for(const t in df)idf[t]=Math.log(1+(Nc-df[t]+.5)/(df[t]+.5));
+  const q=tokenize(query),out=[];
+  ids.forEach(i=>{const d=docs[i];if(!d.length)return;let s=0;
+    q.forEach(t=>{if(!idf[t])return;const f=d.filter(x=>x===t).length;if(!f)return;s+=idf[t]*(f*(k1+1))/(f+k1*(1-b+b*dl[i]/avg));});
+    if(s>0)out.push([i,s]);});out.sort((a,b)=>b[1]-a[1]);return out;}
+function connected(id){const seen=new Set(),st=[id];while(st.length){const c=st.pop();if(seen.has(c))continue;seen.add(c);
+  edges.forEach(([a,b])=>{if(a===c)st.push(b);if(b===c)st.push(a);});}return seen;}
+
+function connectNext(s){const pool=(BACKLOG[s]||[]).filter(x=>!added.has(x.id));if(!pool.length)return;
+  const it=pool[0];added.add(it.id);const v=it.validation;
+  if(v.type==="ok"){nodes[it.id]=N(Object.assign({},it.node,{tags:[...it.node.tags],status:"trusted"}));
+    if(it.linksTo&&nodes[it.linksTo])edges.push([it.linksTo,it.id,it.edge]);
+    flash=`<div class="okbox">✓ <b>${it.id}</b> validated (IDs present · link resolves · fields complete) → ingested as trusted.</div>`;}
+  else{nodes[it.id]=N(Object.assign({},it.node,{tags:[...it.node.tags],status:"review",
+      reviewReason:v.reason,kind:v.type,candidates:v.candidates||null,parentType:v.parentType||null,edgeLabel:v.edgeLabel}));
+    queue.push(it.id);
+    flash=`<div class="warnbox">⚠ <b>${it.id}</b> failed validation — ${v.reason} <b>Held for review</b> (see queue below).</div>`;}
+  refreshAll();}
+
+function resolveReview(childId,parentId){if(!parentId)return;const n=nodes[childId];
+  edges.push([parentId,childId,n.edgeLabel||"linked to"]);n.status="trusted";n.candidates=null;
+  queue=queue.filter(q=>q!==childId);selected=childId;flash=`<div class="okbox">✓ <b>${childId}</b> linked to <b>${parentId}</b> and ingested as trusted.</div>`;refreshAll();}
+
+function addOCR(doc){const id="EXP-"+doc.key,bd=doc.builds;
+  nodes[id]=N(Object.assign({},bd,{tags:[...bd.tags],ocr:true,status:"trusted",
+    owner:bd.owner+" · verified by "+role().split('·')[0].trim(),passport:Object.assign({},doc.extracted)}));
+  if(doc.linksTo&&nodes[doc.linksTo])edges.push([doc.linksTo,id,doc.edge]);digitised.add(doc.key);}
+
+function heldCount(){return queue.length+(ocrLoaded&&ocrRun&&ocrLoaded.quality==='low'&&!digitised.has(ocrLoaded.key)?1:0);}
+
+/* TAB 1 */
+function renderTiles(){const host=document.getElementById('tiles');let html='';
+  Object.keys(SRC).forEach(s=>{if(s==="Paper")return;
+    const cnt=Object.values(nodes).filter(n=>n.source===s&&visible(n)&&trusted(n)).length;
+    const pool=(BACKLOG[s]||[]).filter(x=>!added.has(x.id));
+    html+=`<div class="tile"><h3>${SRC[s]}</h3><div class="cnt">${cnt}</div><div class="sub">${SRCNOTE[s]}</div>
+      <button class="btn primary small" ${pool.length?'':'disabled'} onclick="connectNext('${s}')">
+        ${pool.length?'+ Connect next (simulated export)':'All connected'}</button></div>`;});
+  host.innerHTML=html;document.getElementById('flash').innerHTML=flash;}
+function renderQueue(){const host=document.getElementById('queue');
+  document.getElementById('qcount').textContent=queue.length?`(${queue.length})`:'';
+  if(!queue.length){host.innerHTML='<div class="okbox">Queue empty — all connected records passed validation or have been resolved.</div>';return;}
+  host.innerHTML=queue.map(id=>{const n=nodes[id];
+    const opts=(n.candidates?n.candidates:Object.keys(nodes).filter(k=>nodes[k].type===n.parentType&&trusted(nodes[k])&&visible(nodes[k])));
+    const optHtml=opts.map(o=>`<option value="${o}">${o} — ${nodes[o].title}</option>`).join('');
+    const kindBadge=n.kind==='ambiguous'?'<span class="badge" style="background:#fde0c0;color:#8a4b00">ambiguous link</span>':'<span class="badge" style="background:#fde0c0;color:#8a4b00">missing link</span>';
+    return `<div class="qitem"><b>${n.title}</b> ${kindBadge}<span class="badge" style="background:#eef4f6;color:#0a6e8a">${SRC[n.source]}</span>
+      <div class="kv" style="margin:6px 0">${n.reviewReason}</div>
+      <div class="field"><label>${n.kind==='ambiguous'?'Pick the correct match':'Assign the '+n.parentType}</label>
+        <select id="sel-${id}">${optHtml}</select>
+        <button class="btn go small" style="margin-top:0" onclick="resolveReview('${id}',document.getElementById('sel-${id}').value)">Resolve &amp; ingest</button></div></div>`;}).join('');}
+function loadSample(key){ocrLoaded=Object.assign({key},OCR_DOCS[key]);ocrRun=false;renderOCR();refreshMetrics();}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='ocrfile'&&e.target.files&&e.target.files[0]){
+  const f=e.target.files[0];
+  ocrLoaded={key:'CUSTOM',custom:true,label:'Uploaded · '+f.name,quality:'low',scanned:'(uploaded file: '+f.name+')\n\nExtraction is simulated in this concept prototype —\na real OCR/AI engine would read the fields here.',
+    extracted:{"Document":f.name,"Allergen":"(detect)","Method":"(detect)","Result":"(detect)","Date":"(detect)"},
+    fieldConf:{"Document":.99,"Allergen":.6,"Method":.55,"Result":.5,"Date":.6},confidence:.58,linksTo:null,edge:null,
+    builds:{type:"experiment",row:5,allergen:"(uploaded)",source:"Paper",date:"—",owner:"uploaded",title:"Uploaded scan — "+f.name,origin:"Uploaded file "+f.name+" (OCR/AI, verified)",tags:["uploaded","paper"]}};
+  ocrRun=false;renderOCR();refreshMetrics();}});
+function runOCR(){ocrRun=true;renderOCR();refreshMetrics();}
+function renderOCR(){const host=document.getElementById('ocrwork');if(!ocrLoaded){host.innerHTML='';return;}
+  const d=ocrLoaded;
+  if(digitised.has(d.key)){host.innerHTML=`<div class="okbox">Digitised &amp; ingested ✓ — see <b>EXP-${d.key}</b> in the graph.</div>`;return;}
+  let right;
+  if(!ocrRun){right=`<div class="card"><b>OCR / AI extraction</b><p class="note" style="margin:10px 0">Run extraction to read the fields.</p>
+    <button class="btn primary small" onclick="runOCR()">Run OCR / AI</button></div>`;}
+  else{const low=d.quality==='low';
+    let fields=Object.entries(d.extracted).map(([k,v])=>{const fc=d.fieldConf[k]||1;
+      return `<div class="field"><label>${k} <span class="${fc<.8?'conf-lo':'conf-hi'}">${Math.round(fc*100)}%</span></label>
+        <input type="text" value="${v}" data-k="${k}" style="${fc<.8?'border-color:#e0a000;background:#fff8ec':''}"/></div>`;}).join('');
+    right=`<div class="card"><b>OCR / AI extraction</b>
+      <div style="margin:6px 0 4px;font-size:13px">Overall confidence <span class="${low?'conf-lo':'conf-hi'}">${Math.round(d.confidence*100)}%</span></div>
+      <div class="relwrap"><i style="width:${Math.round(d.confidence*100)}%"></i></div>
+      ${low?'<div class="warnbox" style="margin:10px 0">⚠ Quality issues — <b>human review required</b>. Correct the red fields, then confirm.</div>':'<div class="okbox" style="margin:10px 0">Clean scan — high confidence. Quick sign-off, then ingest.</div>'}
+      ${fields}<button class="btn go small" onclick="ingestDoc()">${low?'Verify &amp; ingest':'Ingest'}</button></div>`;}
+  host.innerHTML=`<div class="grid2"><div class="card"><b>${d.label}</b>
+      <div class="scan ${d.quality==='low'?'bad':''}" style="margin-top:8px">${d.scanned}</div></div>${right}</div>`;}
+function ingestDoc(){const d=ocrLoaded;document.querySelectorAll('#ocrwork input[data-k]').forEach(inp=>d.extracted[inp.dataset.k]=inp.value);
+  if(d.custom){const id="EXP-CUSTOM-"+Date.now();nodes[id]=N(Object.assign({},d.builds,{tags:[...d.builds.tags],ocr:true,status:"trusted",passport:Object.assign({},d.extracted)}));}
+  else addOCR(d);
+  if(!d.custom)digitised.add(d.key);ocrLoaded=null;ocrRun=false;refreshAll();}
+
+/* TAB 2 */
+function renderGraph(){const svg=document.getElementById('graph');
+  const ids=Object.keys(nodes).filter(i=>visible(nodes[i]));
+  const hl=selected&&visible(nodes[selected])?connected(selected):new Set();
+  const slot={},pos={};
+  ids.forEach(i=>{const n=nodes[i],key=COL[n.type]+'-'+n.row,k=slot[key]||0;slot[key]=k+1;pos[i]={x:24+COL[n.type]*104,y:40+n.row*92+k*46};});
+  // ambiguous candidate positions also need to exist (they are real nodes) — ok
+  let maxY=0;for(const i in pos)maxY=Math.max(maxY,pos[i].y);
+  svg.setAttribute('height',maxY+70);svg.setAttribute('viewBox',`0 0 660 ${maxY+70}`);
+  let out='<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#b6bbc0" stroke-width="1.4"/></marker><marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#d8642f" stroke-width="1.6"/></marker><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="#d98a00" stroke-width="1.6"/></marker></defs>';
+  // solid edges
+  edges.forEach(([a,b])=>{if(!pos[a]||!pos[b])return;const hot=hl.has(a)&&hl.has(b);
+    const x1=pos[a].x+86,y1=pos[a].y+18,x2=pos[b].x-4,y2=pos[b].y+18;
+    out+=`<path d="M${x1} ${y1} C ${x1+24} ${y1}, ${x2-24} ${y2}, ${x2} ${y2}" fill="none" stroke="${hot?'#d8642f':'#c7ccd1'}" stroke-width="${hot?2:1}" marker-end="url(#${hot?'arh':'ar'})"/>`;});
+  // dashed candidate edges for review nodes
+  ids.forEach(i=>{const n=nodes[i];if(n.status!=='review'||!n.candidates)return;
+    n.candidates.forEach(c=>{if(!pos[c]||!pos[i])return;const x1=pos[c].x+86,y1=pos[c].y+18,x2=pos[i].x-4,y2=pos[i].y+18;
+      out+=`<path d="M${x1} ${y1} C ${x1+24} ${y1}, ${x2-24} ${y2}, ${x2} ${y2}" fill="none" stroke="#d98a00" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#aw)"/>`;});});
+  ids.forEach(i=>{const n=nodes[i],p=pos[i],sel=i===selected,hot=hl.has(i),rev=n.status==='review';
+    const stroke=sel?'#0a6e8a':(rev?'#d98a00':(hot?'#d8642f':(n.ocr?'#c9a227':'#c2c7cc'))),sw=sel?2.8:(rev?2:(hot?2:(n.ocr?1.6:0.7)));
+    const fill=rev?'#fff7e6':FILL[n.type],dash=rev?'stroke-dasharray="5 4"':'';
+    out+=`<g style="cursor:pointer" onclick="selectNode('${i}')">
+      <rect x="${p.x}" y="${p.y}" width="86" height="36" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${dash}/>
+      <text x="${p.x+43}" y="${p.y+15}" text-anchor="middle" font-size="9" font-weight="700" fill="#1f2a30">${n.type.toUpperCase()}${rev?' ⚠':(n.ocr?' ⬡':'')}</text>
+      <text x="${p.x+43}" y="${p.y+28}" text-anchor="middle" font-size="8" fill="#3a4750">${i.length>13?i.slice(0,12)+'…':i}</text></g>`;});
+  svg.innerHTML=out;
+  document.getElementById('glegend').innerHTML='🟩 sample · 🟦 experiment · 🟪 protocol · 🟧 result · 🟨 report · 🟥 decision &nbsp;|&nbsp; <span style="color:#d98a00">⚠ dashed amber = unresolved link (resolve in queue)</span> · gold ⬡ = from paper';
+  renderPanel();}
+function selectNode(id){selected=id;renderGraph();}
+function renderPanel(){const host=document.getElementById('gpanel');
+  if(!selected||!visible(nodes[selected])){host.innerHTML=`<b>Click a node</b><p class="note" style="margin-top:6px">Shows the Data Passport, trace-to-origin, and BM25-retrieved related records.</p>
+    ${role()===ROLES[0]?'<div class="warnbox">Standard user — the confidential Peanut (Ara h) project is hidden from the graph and search.</div>':''}`;return;}
+  const n=nodes[selected];
+  if(n.status==='review'){host.innerHTML=`<div style="font-weight:600">${n.title}</div>
+    <div class="warnbox" style="margin:8px 0">⚠ Unresolved ${n.kind} link — ${n.reviewReason}<br>Resolve it in the <b>Review queue</b> (tab 1) before it becomes trusted and searchable.</div>
+    <div class="trace"><b>Trace to origin</b><br>↳ ${n.origin}</div>`;return;}
+  const ids=Object.keys(nodes).filter(i=>visible(nodes[i])&&trusted(nodes[i])&&i!==selected);
+  const rel=bm25(n.allergen+' '+n.type+' '+[...n.tags].join(' '),ids).slice(0,5),top=rel.length?rel[0][1]:1;
+  const kv=Object.entries(n.passport).map(([k,v])=>`<div class="kv">• <b>${k}:</b> ${v}</div>`).join('');
+  const audit=role()===ROLES[2]?`<div class="kv" style="margin-top:6px"><b>Audit entry (concept) · 21 CFR Part 11 / Annex 11</b><br>Retention GxP 20–30 yr · ${n.owner}, ${n.date}</div>`:'';
+  host.innerHTML=`<div style="font-weight:600">${n.title}</div>
+    <div style="margin:6px 0"><span class="badge" style="background:${FILL[n.type]}">${n.type.toUpperCase()}</span>
+      <span class="badge" style="background:#eef4f6;color:#0a6e8a">${SRC[n.source]}</span>
+      ${n.ocr?'<span class="badge" style="background:#fbe9c8;color:#8a5a00">from paper</span>':''}</div>
+    <div class="trace"><b>Trace to origin</b><br>↳ ${n.origin}<br><span class="note">${n.owner} · ${n.date}</span></div>${audit}
+    <div style="margin-top:10px"><b>Data Passport</b>${kv}</div>
+    <div style="margin-top:12px"><b>Related records</b>
+      ${rel.length?rel.map(([id,s])=>{const m=nodes[id],pct=Math.round(100*s/top);
+        return `<div class="relrow" onclick="selectNode('${id}')"><div style="display:flex;justify-content:space-between;gap:8px">
+          <span style="font-size:12.5px">${m.title}</span><b style="font-size:12px;color:#0a6e8a">${s.toFixed(2)}</b></div>
+          <div class="relwrap" style="margin-top:3px"><i style="width:${pct}%"></i></div></div>`;}).join('')
+        :'<p class="note">No related records in scope.</p>'}</div>`;}
+
+/* TAB 3 */
+function renderSearch(){const q=document.getElementById('q').value;
+  const ids=Object.keys(nodes).filter(i=>visible(nodes[i])&&trusted(nodes[i]));
+  const ranked=bm25(q,ids),cost=Math.round(MANUAL_MIN/60*RATE);
+  document.getElementById('sMetrics').innerHTML=`<div class="metric"><div class="v">${ranked.length}</div><div class="k">results</div></div>
+     <div class="metric"><div class="v">~${MANUAL_MIN}m</div><div class="k">hunt avoided</div></div>
+     <div class="metric"><div class="v">€${cost}</div><div class="k">recovered/search</div></div>`;
+  const top=ranked.length?ranked[0][1]:1,host=document.getElementById('results');
+  host.innerHTML=ranked.length?ranked.map(([id,s])=>{const n=nodes[id],pct=Math.round(100*s/top);
+    const neigh=[...connected(id)].filter(m=>m!==id&&visible(nodes[m])&&trusted(nodes[m]));
+    const kv=Object.entries(n.passport).map(([k,v])=>`<div class="kv">• <b>${k}:</b> ${v}</div>`).join('');
+    const audit=role()===ROLES[2]?`<div class="kv"><b>Audit (concept):</b> GxP 20–30 yr · ${n.owner}, ${n.date}</div>`:'';
+    return `<div class="card"><div style="display:flex;justify-content:space-between;gap:14px">
+      <div><div style="font-weight:600">${n.title}</div><div style="margin-top:6px">
+        <span class="badge" style="background:${FILL[n.type]}">${n.type.toUpperCase()}</span>
+        <span class="badge" style="background:#eef4f6;color:#0a6e8a">${SRC[n.source]}</span>
+        ${n.ocr?'<span class="badge" style="background:#fbe9c8;color:#8a5a00">from paper</span>':''}</div></div>
+      <div style="min-width:118px;text-align:right;font-size:11.5px;color:#667">relevance
+        <div class="relwrap" style="margin:3px 0"><i style="width:${pct}%"></i></div><b>${s.toFixed(2)}</b></div></div>
+      <details><summary>Data Passport · trace · linked</summary><div class="grid2" style="margin-top:8px">
+        <div><b>Data Passport</b>${kv}</div>
+        <div><div class="trace"><b>Trace to origin</b><br>↳ ${n.origin}<br><span class="note">${n.owner} · ${n.date}</span></div>${audit}</div></div>
+        ${neigh.length?`<div class="kv" style="margin-top:8px"><b>Linked:</b> ${neigh.map(m=>'<code>'+m+'</code>').join(' → ')}</div>`:''}
+      </details></div>`;}).join('')
+    :'<div class="card note">No matches in scope (restricted for your role, held for review, or still on paper).</div>';
+  const hint=document.getElementById('hint');
+  if(ranked.some(([id])=>id==="EXP-NB-2011-114"))hint.innerHTML='<div class="okbox">The 2011 paper study you digitised now ranks here — prior work surfaced before re-running the assay.</div>';
+  else if(!digitised.has("NB-2011-114")&&q.toLowerCase().includes("bet"))hint.innerHTML='<div class="warnbox">A 2011 Bet v 1 study sits on paper (poor scan) — upload/try it in tab 1 and search again.</div>';
+  else hint.innerHTML='';}
+
+function refreshMetrics(){document.getElementById('mRec').textContent=Object.keys(nodes).filter(i=>visible(nodes[i])&&trusted(nodes[i])).length;
+  document.getElementById('mHeld').textContent=heldCount();document.getElementById('mDigi').textContent=digitised.size;}
+function refreshAll(){refreshMetrics();renderTiles();renderQueue();renderOCR();renderGraph();renderSearch();}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');document.getElementById('p-'+t.dataset.p).classList.add('active');});
+document.getElementById('q').oninput=renderSearch;
+document.getElementById('role').onchange=()=>{selected=null;refreshAll();};
+document.getElementById('reset').onclick=()=>{init();refreshAll();};
+refreshAll();
+</script>
+</body>
+</html>
